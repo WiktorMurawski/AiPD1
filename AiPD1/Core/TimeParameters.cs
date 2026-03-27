@@ -9,20 +9,27 @@
         public float[] FundamentalFrequencyAutocorrelation { get; private set; } = Array.Empty<float>();
         public float[] FundamentalFrequencyAMDF { get; private set; } = Array.Empty<float>();
 
-        public TimeParameters(IReadOnlyList<float[]> frames)
+        public float VolumeSilenceThreshold { get; private set; } = 0.005f;
+        //public float VolumeSilenceThreshold { get; private set; } = 0.003f;
+        public float ZCRSilenceThreshold { get; private set; } = 0.001f;
+
+        public int SampleRate { get; private set; } = 0;
+
+        public TimeParameters(IReadOnlyList<float[]> frames, int sampleRate)
         {
+            SampleRate = sampleRate;
             CalculateParameters(frames);
         }
 
-        private void CalculateParameters(IReadOnlyList<float[]> frames)
+        public void CalculateParameters(IReadOnlyList<float[]> frames)
         {
             Volume = CalculateVolume(frames);
             ShortTimeEnergy = CalculateShortTimeEnergy(frames);
             ZeroCrossingRate = CalculateZeroCrossingRate(frames);
-            return;
             SilentRatio = CalculateSilentRatio(frames);
             FundamentalFrequencyAutocorrelation = CalculateFundamentalFrequencyAutocorrelation(frames);
             FundamentalFrequencyAMDF = CalculateFundamentalFrequencyAMDF(frames);
+            return;
         }
 
         private float[] CalculateVolume(IReadOnlyList<float[]> frames)
@@ -76,7 +83,7 @@
                         sum++;
                     }
                 }
-                zceArray[i] = (float)sum / (2 * frameCount);
+                zceArray[i] = (float)sum / (frameCount);
             }
 
             return zceArray;
@@ -86,21 +93,84 @@
         {
             int frameCount = frames.Count;
 
-            throw new NotImplementedException();
-        }
+            float[] srArray = new float[frameCount];
+            for (int i = 0; i < frameCount; i++)
+            {
+                float[] frame = frames[i];
+                srArray[i] = ZeroCrossingRate[i] >= ZCRSilenceThreshold && Volume[i] <= VolumeSilenceThreshold ? 1 : 0;
+            }
 
-        private float[] CalculateFundamentalFrequencyAMDF(IReadOnlyList<float[]> frames)
-        {
-            int frameCount = frames.Count;
-
-            throw new NotImplementedException();
+            return srArray;
         }
 
         private float[] CalculateFundamentalFrequencyAutocorrelation(IReadOnlyList<float[]> frames)
         {
             int frameCount = frames.Count;
 
-            throw new NotImplementedException();
+            int minLag = (int)(SampleRate / 500.0);
+            int maxLag = (int)(SampleRate / 60.0);
+
+            if (minLag < 1) minLag = 1;
+            if (maxLag > frames[0].Length / 2) maxLag = frames[0].Length / 2;
+
+            float[] ffArray = new float[frameCount];
+            for (int i = 0; i < frameCount; i++)
+            {
+                float[] frame = frames[i];
+                float maxCorrelation = float.MinValue;
+                int bestLag = 0;
+                for (int lag = minLag; lag <= maxLag; lag++)
+                {
+                    float correlation = 0f;
+                    for (int j = 0; j < frame.Length - lag; j++)
+                    {
+                        correlation += frame[j] * frame[j + lag];
+                    }
+                    if (correlation > maxCorrelation)
+                    {
+                        maxCorrelation = correlation;
+                        bestLag = lag;
+                    }
+                }
+                ffArray[i] = bestLag > 0 ? (float)SampleRate / bestLag : 0f;
+            }
+
+            return ffArray;
+        }
+
+        private float[] CalculateFundamentalFrequencyAMDF(IReadOnlyList<float[]> frames)
+        {
+            int frameCount = frames.Count;
+
+            int minLag = (int)(SampleRate / 500.0);
+            int maxLag = (int)(SampleRate / 60.0);
+
+            if (minLag < 1) minLag = 1;
+            if (maxLag > frames[0].Length / 2) maxLag = frames[0].Length / 2;
+
+            float[] ffArray = new float[frameCount];
+            for (int i = 0; i < frameCount; i++)
+            {
+                float[] frame = frames[i];
+                float minAMDF = float.MaxValue;
+                int bestLag = 0;
+                for (int lag = minLag; lag <= maxLag; lag++)
+                {
+                    float amdf = 0f;
+                    for (int j = 0; j < frame.Length - lag; j++)
+                    {
+                        amdf += Math.Abs(frame[j + lag] - frame[j]);
+                    }
+                    if (amdf < minAMDF)
+                    {
+                        minAMDF = amdf;
+                        bestLag = lag;
+                    }
+                }
+                ffArray[i] = bestLag > 0 ? (float)SampleRate / bestLag : 0f;
+            }
+
+            return ffArray;
         }
     }
 }

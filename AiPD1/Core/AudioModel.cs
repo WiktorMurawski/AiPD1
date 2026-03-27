@@ -19,7 +19,12 @@ namespace AiPD1.Core
         {
             LoadWAVFile(filePath);
             DivideIntoFrames();
-            TimeParams = new TimeParameters(Frames);
+            TimeParams = new TimeParameters(Frames, SampleRate);
+        }
+
+        public void RecalculateTimeParameters()
+        {
+            TimeParams.CalculateParameters(Frames);
         }
 
         private void LoadWAVFile(string filePath)

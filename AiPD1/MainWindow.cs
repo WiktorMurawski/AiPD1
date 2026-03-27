@@ -37,7 +37,7 @@ namespace AiPD1
                 plot.Plot.Axes.SetLimitsY(-1.00, 1.00);
                 plot.Plot.Layout.Fixed(new ScottPlot.PixelPadding(
                     left: 40,
-                    right: 5,
+                    right: 10,
                     bottom: 40,
                     top: 40
                 ));
@@ -65,12 +65,7 @@ namespace AiPD1
             }
         }
 
-        private void Exit_ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Application.Exit();
-        }
-
-        private void zresetujWykresyToolStripMenuItem_Click(object sender, EventArgs e)
+        private void AutoScalePlots()
         {
             foreach ((var plot, _) in Plots)
             {
@@ -81,13 +76,23 @@ namespace AiPD1
             }
         }
 
+        private void Exit_ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void zresetujWykresyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AutoScalePlots();
+        }
+
         private void LoadAudioFile_ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = "Pliki audio (*.wav)|*.wav|Wszystkie pliki (*.*)|*.*",
                 Title = "Wybierz plik audio",
-                InitialDirectory = Path.GetFullPath(Path.Combine(Application.StartupPath, @"..\..\..\..\")),
+                InitialDirectory = Path.GetFullPath(Path.Combine(Application.StartupPath, @"..\..\..\..\..\")),
             };
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -135,7 +140,7 @@ namespace AiPD1
 
         private void DisplayTimeParamsSignalOnPlot(FormsPlot plot, float[] paramSignal, ScottPlot.Color color)
         {
-            if (CurrentAudioModel?.TimeParams == null || paramSignal.Length <= 0)
+            if (CurrentAudioModel?.TimeParams == null || paramSignal.Length == 0)
                 return;
 
             plot.Plot.Clear();
