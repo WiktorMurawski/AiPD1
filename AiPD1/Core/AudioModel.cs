@@ -51,8 +51,8 @@ namespace AiPD1.Core
             FileName = Path.GetFileName(filePath);
 
             int totalSamples = (int)(reader.Length / reader.WaveFormat.Channels / sizeof(float));
-            int padding = FrameSize - totalSamples % FrameSize;
-            Samples = new float[totalSamples + padding];
+            //int padding = FrameSize - totalSamples % FrameSize;
+            Samples = new float[totalSamples];
 
             int samplesRead = monoProvider.Read(Samples, 0, totalSamples);
 
