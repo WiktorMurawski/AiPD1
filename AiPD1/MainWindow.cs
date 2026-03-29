@@ -43,6 +43,7 @@ namespace AiPD1
 
             foreach (var (plot, title) in Plots)
             {
+                plot.Width = MainSplitContainer.Panel1.Width - 20;
                 plot.Plot.Title(title);
                 plot.Plot.Axes.SetLimitsX(0.00, 1.00);
                 plot.Plot.Axes.SetLimitsY(-1.00, 1.00);

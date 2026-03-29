@@ -129,6 +129,7 @@
             // MainSplitContainer.Panel1
             // 
             MainSplitContainer.Panel1.AutoScroll = true;
+            MainSplitContainer.Panel1.AutoScrollMinSize = new Size(20, 0);
             MainSplitContainer.Panel1.BackColor = Color.White;
             MainSplitContainer.Panel1.Controls.Add(FFAMDFPlot);
             MainSplitContainer.Panel1.Controls.Add(FFAutocorrelationPlot);
@@ -137,7 +138,6 @@
             MainSplitContainer.Panel1.Controls.Add(STEPlot);
             MainSplitContainer.Panel1.Controls.Add(VolumePlot);
             MainSplitContainer.Panel1.Controls.Add(WavePlot);
-            MainSplitContainer.Panel1.RightToLeft = RightToLeft.No;
             // 
             // MainSplitContainer.Panel2
             // 
@@ -240,6 +240,7 @@
             // 
             // FrameSize_ComboBox
             // 
+            FrameSize_ComboBox.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             FrameSize_ComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             FrameSize_ComboBox.FormattingEnabled = true;
             FrameSize_ComboBox.Location = new Point(118, 3);
@@ -276,6 +277,7 @@
             // 
             // label1
             // 
+            label1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label1.Location = new Point(3, 3);
             label1.Margin = new Padding(0, 3, 0, 0);
             label1.Name = "label1";
