@@ -9,13 +9,24 @@ namespace AiPD1
     {
         private const string WINDOW_NAME = "AiPD Projekt 1";
         AudioModel? CurrentAudioModel { get; set; } = null;
+        private int DefaultFrameSize { get; set; } = 256;
         List<(FormsPlot, string)> Plots = new List<(FormsPlot, string)>();
 
         public MainWindow()
         {
             InitializeComponent();
 
+            SetupComboBoxes();
+
             SetupPlots();
+        }
+
+        private void SetupComboBoxes()
+        {
+            FrameSize_ComboBox.Items.Clear();
+            FrameSize_ComboBox.Items.AddRange(new object[] { 128, 256, 512, 1024 });
+            //FrameSize_ComboBox.Items.AddRange(new string[] { "128", "256", "512", "1024", "2048" });
+            FrameSize_ComboBox.SelectedIndex = 1;
         }
 
         private void SetupPlots()
@@ -37,7 +48,7 @@ namespace AiPD1
                 plot.Plot.Axes.SetLimitsY(-1.00, 1.00);
                 plot.Plot.Layout.Fixed(new ScottPlot.PixelPadding(
                     left: 40,
-                    right: 10,
+                    right: 5,
                     bottom: 40,
                     top: 40
                 ));
@@ -97,19 +108,49 @@ namespace AiPD1
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 string filePath = openFileDialog.FileName;
-                CurrentAudioModel = new AudioModel(filePath);
+                CurrentAudioModel = new AudioModel(filePath, DefaultFrameSize);
                 Logger.WriteLine($"Wybrano plik: {filePath}");
 
                 this.Text = WINDOW_NAME + " - " + CurrentAudioModel.FileName;
 
-                DisplayAudioWaveOnPlot();
-                DisplayTimeParamsSignalOnPlot(VolumePlot, CurrentAudioModel.TimeParams.Volume, Colors.Red);
-                DisplayTimeParamsSignalOnPlot(STEPlot, CurrentAudioModel.TimeParams.ShortTimeEnergy, Colors.DarkRed);
-                DisplayTimeParamsSignalOnPlot(ZCRPlot, CurrentAudioModel.TimeParams.ZeroCrossingRate, Colors.Green);
-                DisplayTimeParamsSignalOnPlot(SRPlot, CurrentAudioModel.TimeParams.SilentRatio, Colors.Green);
-                DisplayTimeParamsSignalOnPlot(FFAutocorrelationPlot, CurrentAudioModel.TimeParams.FundamentalFrequencyAutocorrelation, Colors.Green);
-                DisplayTimeParamsSignalOnPlot(FFAMDFPlot, CurrentAudioModel.TimeParams.FundamentalFrequencyAMDF, Colors.Green);
+                DisplayCalculatedParams();
             }
+        }
+
+        private void DisplayCalculatedParams()
+        {
+            PlotSignals();
+            DisplayClipLevelValues();
+        }
+
+        private void PlotSignals()
+        {
+            if (CurrentAudioModel == null)
+                throw new InvalidDataException("Nie można wyświetlić sygnałów, ponieważ CurrentAudioModel jest null.");
+            DisplayAudioWaveOnPlot();
+            DisplayTimeParamsSignalOnPlot(VolumePlot, CurrentAudioModel.TimeParams.Volume, Colors.Red);
+            DisplayTimeParamsSignalOnPlot(STEPlot, CurrentAudioModel.TimeParams.ShortTimeEnergy, Colors.DarkRed);
+            DisplayTimeParamsSignalOnPlot(ZCRPlot, CurrentAudioModel.TimeParams.ZeroCrossingRate, Colors.Green);
+            DisplayTimeParamsSignalOnPlot(SRPlot, CurrentAudioModel.TimeParams.SilentRatio, Colors.Green);
+            DisplayTimeParamsSignalOnPlot(FFAutocorrelationPlot, CurrentAudioModel.TimeParams.FundamentalFrequencyAutocorrelation, Colors.Green);
+            DisplayTimeParamsSignalOnPlot(FFAMDFPlot, CurrentAudioModel.TimeParams.FundamentalFrequencyAMDF, Colors.Green);
+        }
+
+        private void DisplayClipLevelValues()
+        {
+            if (CurrentAudioModel == null)
+                throw new InvalidDataException("Nie można wyświetlić wartości, ponieważ CurrentAudioModel jest null.");
+
+            VSTDValue_Label.Text = $"{CurrentAudioModel.TimeParams.VSTD:F4}";
+            VMEANValue_Label.Text = $"{CurrentAudioModel.TimeParams.VMEAN:F4}";
+            VDRValue_Label.Text = $"{CurrentAudioModel.TimeParams.VDR:F4}";
+            VUValue_Label.Text = $"{CurrentAudioModel.TimeParams.VU:F4}";
+
+            LSTERValue_Label.Text = $"{CurrentAudioModel.TimeParams.LSTER:F4}";
+            EnergyEntropyValue_Label.Text = $"{CurrentAudioModel.TimeParams.EnergyEntropy:F4}";
+
+            ZSTDValue_Label.Text = $"{CurrentAudioModel.TimeParams.ZSTD:F4}";
+            HZCRRValue_Label.Text = $"{CurrentAudioModel.TimeParams.HZCRR:F4}";
         }
 
         private void DisplayAudioWaveOnPlot()
@@ -157,7 +198,22 @@ namespace AiPD1
             signal.LineWidth = 1.0f;
 
             plot.Plot.Axes.AutoScaleY();
+            plot.Plot.Axes.SetLimitsX(0, CurrentAudioModel.Duration.TotalSeconds);
             plot.Refresh();
+        }
+
+        private void FrameSize_ComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ComboBox cb = (ComboBox)sender;
+            if (cb.SelectedItem is null) return;
+            int selectedValue = (int)cb.SelectedItem;
+            DefaultFrameSize = selectedValue;
+
+            if (CurrentAudioModel is null) return;
+            CurrentAudioModel.FrameSize = selectedValue;
+            CurrentAudioModel.FrameSizeChanged();
+
+            DisplayCalculatedParams();
         }
     }
 }

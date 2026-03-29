@@ -7,24 +7,32 @@ namespace AiPD1.Core
     internal class AudioModel
     {
         public string FileName { get; private set; } = string.Empty;
-        public float[] Samples { get; private set; } = Array.Empty<float>();
         public int SampleRate { get; private set; } = 0;
         public TimeSpan Duration { get; private set; } = TimeSpan.Zero;
-        public int FrameSize { get; private set; } = 256;
+        public float[] Samples { get; private set; } = Array.Empty<float>();
+
+        public int FrameSize { get; set; } = 256;
         public List<float[]> Frames { get; private set; } = new List<float[]>();
         public int FrameCount => Frames.Count;
-        public TimeParameters TimeParams { get; private set; }
+        public TimeParameters TimeParams { get; private set; } = new TimeParameters();
 
-        public AudioModel(string filePath)
+        public AudioModel(string filePath, int frameSize)
         {
+            FrameSize = frameSize;
             LoadWAVFile(filePath);
             DivideIntoFrames();
-            TimeParams = new TimeParameters(Frames, SampleRate);
+            CalculateTimeParameters();
         }
 
-        public void RecalculateTimeParameters()
+        public void FrameSizeChanged()
         {
-            TimeParams.CalculateParameters(Frames);
+            DivideIntoFrames();
+            CalculateTimeParameters();
+        }
+
+        public void CalculateTimeParameters()
+        {
+            TimeParams.CalculateParameters(Frames, SampleRate, FrameSize);
         }
 
         private void LoadWAVFile(string filePath)
