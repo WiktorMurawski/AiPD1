@@ -9,7 +9,6 @@ namespace AiPD1
     {
         private const string WINDOW_NAME = "AiPD Projekt 1";
         AudioModel? CurrentAudioModel { get; set; } = null;
-        private int DefaultFrameSize { get; set; } = 256;
         List<(FormsPlot, string)> Plots = new List<(FormsPlot, string)>();
 
         public MainWindow()
@@ -27,6 +26,7 @@ namespace AiPD1
             FrameSize_ComboBox.Items.AddRange(new object[] { 128, 256, 512, 1024 });
             //FrameSize_ComboBox.Items.AddRange(new string[] { "128", "256", "512", "1024", "2048" });
             FrameSize_ComboBox.SelectedIndex = 1;
+            AudioModel.FrameSize = (int)FrameSize_ComboBox.SelectedItem!;
         }
 
         private void SetupPlots()
@@ -109,7 +109,7 @@ namespace AiPD1
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 string filePath = openFileDialog.FileName;
-                CurrentAudioModel = new AudioModel(filePath, DefaultFrameSize);
+                CurrentAudioModel = new AudioModel(filePath);
                 Logger.WriteLine($"Wybrano plik: {filePath}");
 
                 this.Text = WINDOW_NAME + " - " + CurrentAudioModel.FileName;
@@ -187,7 +187,7 @@ namespace AiPD1
 
             plot.Plot.Clear();
 
-            double step = (double)CurrentAudioModel.FrameSize / CurrentAudioModel.SampleRate;
+            double step = (double)AudioModel.FrameSize / CurrentAudioModel.SampleRate;
             var timeParams = CurrentAudioModel.TimeParams;
             var signal = plot.Plot.Add.Signal(
                 paramSignal,
@@ -208,12 +208,25 @@ namespace AiPD1
             ComboBox cb = (ComboBox)sender;
             if (cb.SelectedItem is null) return;
             int selectedValue = (int)cb.SelectedItem;
-            DefaultFrameSize = selectedValue;
 
             if (CurrentAudioModel is null) return;
-            CurrentAudioModel.FrameSize = selectedValue;
+            AudioModel.FrameSize = selectedValue;
             CurrentAudioModel.FrameSizeChanged();
 
+            DisplayCalculatedParams();
+        }
+
+        private void VolumeThreshold_NumericUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            TimeParameters.VolumeSilenceThreshold = (float)VolumeThreshold_NumericUpDown.Value;
+            CurrentAudioModel?.TimeParams.UpdateSilentRatio(CurrentAudioModel.Frames);
+            DisplayCalculatedParams();
+        }
+
+        private void ZCRThreshold_NumericUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            TimeParameters.ZCRSilenceThreshold = (float)ZCRThreshold_NumericUpDown.Value;
+            CurrentAudioModel?.TimeParams.UpdateSilentRatio(CurrentAudioModel.Frames);
             DisplayCalculatedParams();
         }
     }

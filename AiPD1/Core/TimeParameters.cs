@@ -26,14 +26,14 @@
         public float HZCRR { get; private set; } = 0;
 
         //public float VolumeSilenceThreshold { get; set; } = 0.003f;
-        public float VolumeSilenceThreshold { get; set; } = 0.005f;
-        public float ZCRSilenceThreshold { get; set; } = 0.001f;
+        public static float VolumeSilenceThreshold { get; set; } = 0.005f;
+        public static float ZCRSilenceThreshold { get; set; } = 0.001f;
 
         // Do Autocorrelation i AMDF
-        public int MinLag { get; set; } = 50;
-        public int MaxLag { get; set; } = 200;
+        public static int MinLag { get; set; } = 50;
+        public static int MaxLag { get; set; } = 200;
 
-        public void CalculateParameters(IReadOnlyList<float[]> frames, int sampleRate, int frameSize)
+        public void UpdateAllParameters(IReadOnlyList<float[]> frames, int sampleRate, int frameSize)
         {
             Volume = CalculateVolume(frames);
             ShortTimeEnergy = CalculateShortTimeEnergy(frames);
@@ -52,7 +52,11 @@
 
             ZSTD = CalculateZSTD(ZeroCrossingRate);
             //HZCRR = CalculateHZCRR(ZeroCrossingRate);
+        }
 
+        public void UpdateSilentRatio(IReadOnlyList<float[]> frames)
+        {
+            SilentRatio = CalculateSilentRatio(frames);
         }
 
         // --- Cechy na poziomie ramek ---

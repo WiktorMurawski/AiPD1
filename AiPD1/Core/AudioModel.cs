@@ -11,14 +11,13 @@ namespace AiPD1.Core
         public TimeSpan Duration { get; private set; } = TimeSpan.Zero;
         public float[] Samples { get; private set; } = Array.Empty<float>();
 
-        public int FrameSize { get; set; } = 256;
+        public static int FrameSize { get; set; } = 256;
         public List<float[]> Frames { get; private set; } = new List<float[]>();
         public int FrameCount => Frames.Count;
         public TimeParameters TimeParams { get; private set; } = new TimeParameters();
 
-        public AudioModel(string filePath, int frameSize)
+        public AudioModel(string filePath)
         {
-            FrameSize = frameSize;
             LoadWAVFile(filePath);
             DivideIntoFrames();
             CalculateTimeParameters();
@@ -32,7 +31,7 @@ namespace AiPD1.Core
 
         public void CalculateTimeParameters()
         {
-            TimeParams.CalculateParameters(Frames, SampleRate, FrameSize);
+            TimeParams.UpdateAllParameters(Frames, SampleRate, FrameSize);
         }
 
         private void LoadWAVFile(string filePath)

@@ -43,6 +43,10 @@
             STEPlot = new ScottPlot.WinForms.FormsPlot();
             VolumePlot = new ScottPlot.WinForms.FormsPlot();
             WavePlot = new ScottPlot.WinForms.FormsPlot();
+            VolumeThreshold_NumericUpDown = new NumericUpDown();
+            ZCRThreshold_NumericUpDown = new NumericUpDown();
+            ZCRSilenceThreshold_Label = new Label();
+            VolumeSilenceThreshold_Label = new Label();
             FrameSize_Label = new Label();
             FrameSize_ComboBox = new ComboBox();
             panel1 = new Panel();
@@ -68,6 +72,8 @@
             MainSplitContainer.Panel1.SuspendLayout();
             MainSplitContainer.Panel2.SuspendLayout();
             MainSplitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)VolumeThreshold_NumericUpDown).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)ZCRThreshold_NumericUpDown).BeginInit();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -142,6 +148,10 @@
             // MainSplitContainer.Panel2
             // 
             MainSplitContainer.Panel2.BackColor = SystemColors.Control;
+            MainSplitContainer.Panel2.Controls.Add(VolumeThreshold_NumericUpDown);
+            MainSplitContainer.Panel2.Controls.Add(ZCRThreshold_NumericUpDown);
+            MainSplitContainer.Panel2.Controls.Add(ZCRSilenceThreshold_Label);
+            MainSplitContainer.Panel2.Controls.Add(VolumeSilenceThreshold_Label);
             MainSplitContainer.Panel2.Controls.Add(FrameSize_Label);
             MainSplitContainer.Panel2.Controls.Add(FrameSize_ComboBox);
             MainSplitContainer.Panel2.Controls.Add(panel1);
@@ -159,7 +169,7 @@
             FFAMDFPlot.Location = new Point(0, 1203);
             FFAMDFPlot.Margin = new Padding(3, 0, 3, 0);
             FFAMDFPlot.Name = "FFAMDFPlot";
-            FFAMDFPlot.Size = new Size(660, 200);
+            FFAMDFPlot.Size = new Size(575, 200);
             FFAMDFPlot.TabIndex = 6;
             // 
             // FFAutocorrelationPlot
@@ -170,7 +180,7 @@
             FFAutocorrelationPlot.Location = new Point(0, 1003);
             FFAutocorrelationPlot.Margin = new Padding(3, 0, 3, 0);
             FFAutocorrelationPlot.Name = "FFAutocorrelationPlot";
-            FFAutocorrelationPlot.Size = new Size(660, 200);
+            FFAutocorrelationPlot.Size = new Size(575, 200);
             FFAutocorrelationPlot.TabIndex = 5;
             // 
             // SRPlot
@@ -181,7 +191,7 @@
             SRPlot.Location = new Point(3, 803);
             SRPlot.Margin = new Padding(3, 0, 3, 0);
             SRPlot.Name = "SRPlot";
-            SRPlot.Size = new Size(657, 200);
+            SRPlot.Size = new Size(572, 200);
             SRPlot.TabIndex = 4;
             // 
             // ZCRPlot
@@ -192,7 +202,7 @@
             ZCRPlot.Location = new Point(3, 603);
             ZCRPlot.Margin = new Padding(3, 0, 3, 0);
             ZCRPlot.Name = "ZCRPlot";
-            ZCRPlot.Size = new Size(657, 200);
+            ZCRPlot.Size = new Size(572, 200);
             ZCRPlot.TabIndex = 3;
             // 
             // STEPlot
@@ -203,7 +213,7 @@
             STEPlot.Location = new Point(3, 403);
             STEPlot.Margin = new Padding(3, 0, 3, 0);
             STEPlot.Name = "STEPlot";
-            STEPlot.Size = new Size(657, 200);
+            STEPlot.Size = new Size(572, 200);
             STEPlot.TabIndex = 2;
             // 
             // VolumePlot
@@ -214,7 +224,7 @@
             VolumePlot.Location = new Point(3, 203);
             VolumePlot.Margin = new Padding(3, 0, 3, 0);
             VolumePlot.Name = "VolumePlot";
-            VolumePlot.Size = new Size(657, 200);
+            VolumePlot.Size = new Size(572, 200);
             VolumePlot.TabIndex = 1;
             // 
             // WavePlot
@@ -225,15 +235,59 @@
             WavePlot.Location = new Point(3, 3);
             WavePlot.Margin = new Padding(3, 3, 3, 0);
             WavePlot.Name = "WavePlot";
-            WavePlot.Size = new Size(657, 200);
+            WavePlot.Size = new Size(572, 200);
             WavePlot.TabIndex = 0;
             WavePlot.Tag = "";
+            // 
+            // VolumeThreshold_NumericUpDown
+            // 
+            VolumeThreshold_NumericUpDown.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            VolumeThreshold_NumericUpDown.DecimalPlaces = 4;
+            VolumeThreshold_NumericUpDown.Increment = new decimal(new int[] { 1, 0, 0, 262144 });
+            VolumeThreshold_NumericUpDown.Location = new Point(118, 35);
+            VolumeThreshold_NumericUpDown.Maximum = new decimal(new int[] { 1, 0, 0, 0 });
+            VolumeThreshold_NumericUpDown.Name = "VolumeThreshold_NumericUpDown";
+            VolumeThreshold_NumericUpDown.Size = new Size(82, 23);
+            VolumeThreshold_NumericUpDown.TabIndex = 6;
+            VolumeThreshold_NumericUpDown.Value = new decimal(new int[] { 50, 0, 0, 262144 });
+            VolumeThreshold_NumericUpDown.ValueChanged += VolumeThreshold_NumericUpDown_ValueChanged;
+            // 
+            // ZCRThreshold_NumericUpDown
+            // 
+            ZCRThreshold_NumericUpDown.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            ZCRThreshold_NumericUpDown.DecimalPlaces = 4;
+            ZCRThreshold_NumericUpDown.Increment = new decimal(new int[] { 1, 0, 0, 262144 });
+            ZCRThreshold_NumericUpDown.Location = new Point(118, 60);
+            ZCRThreshold_NumericUpDown.Maximum = new decimal(new int[] { 1, 0, 0, 0 });
+            ZCRThreshold_NumericUpDown.Name = "ZCRThreshold_NumericUpDown";
+            ZCRThreshold_NumericUpDown.Size = new Size(82, 23);
+            ZCRThreshold_NumericUpDown.TabIndex = 4;
+            ZCRThreshold_NumericUpDown.Value = new decimal(new int[] { 10, 0, 0, 262144 });
+            ZCRThreshold_NumericUpDown.ValueChanged += ZCRThreshold_NumericUpDown_ValueChanged;
+            // 
+            // ZCRSilenceThreshold_Label
+            // 
+            ZCRSilenceThreshold_Label.Location = new Point(3, 60);
+            ZCRSilenceThreshold_Label.Name = "ZCRSilenceThreshold_Label";
+            ZCRSilenceThreshold_Label.Size = new Size(112, 23);
+            ZCRSilenceThreshold_Label.TabIndex = 4;
+            ZCRSilenceThreshold_Label.Text = "ZCR Threshold";
+            ZCRSilenceThreshold_Label.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // VolumeSilenceThreshold_Label
+            // 
+            VolumeSilenceThreshold_Label.Location = new Point(3, 35);
+            VolumeSilenceThreshold_Label.Name = "VolumeSilenceThreshold_Label";
+            VolumeSilenceThreshold_Label.Size = new Size(112, 23);
+            VolumeSilenceThreshold_Label.TabIndex = 3;
+            VolumeSilenceThreshold_Label.Text = "Volume Threshold";
+            VolumeSilenceThreshold_Label.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // FrameSize_Label
             // 
             FrameSize_Label.Location = new Point(3, 3);
             FrameSize_Label.Name = "FrameSize_Label";
-            FrameSize_Label.Size = new Size(100, 23);
+            FrameSize_Label.Size = new Size(112, 23);
             FrameSize_Label.TabIndex = 2;
             FrameSize_Label.Text = "Rozmiar ramki";
             FrameSize_Label.TextAlign = ContentAlignment.MiddleLeft;
@@ -457,6 +511,8 @@
             MainSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)MainSplitContainer).EndInit();
             MainSplitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)VolumeThreshold_NumericUpDown).EndInit();
+            ((System.ComponentModel.ISupportInitialize)ZCRThreshold_NumericUpDown).EndInit();
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ResumeLayout(false);
@@ -500,5 +556,9 @@
         private Label label1;
         private Label FrameSize_Label;
         private ComboBox FrameSize_ComboBox;
+        private Label VolumeSilenceThreshold_Label;
+        private Label ZCRSilenceThreshold_Label;
+        private NumericUpDown ZCRThreshold_NumericUpDown;
+        private NumericUpDown VolumeThreshold_NumericUpDown;
     }
 }
