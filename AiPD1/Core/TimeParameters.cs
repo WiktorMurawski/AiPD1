@@ -30,8 +30,8 @@
         public static float ZCRSilenceThreshold { get; set; } = 0.001f;
 
         // Do Autocorrelation i AMDF
-        public static int MinF0 { get; set; } = 50;
-        public static int MaxF0 { get; set; } = 200;
+        public static float MinF0 { get; set; } = 50.0f;
+        public static float MaxF0 { get; set; } = 400.0f;
 
         public void UpdateAllParameters(IReadOnlyList<float[]> frames, int sampleRate, int frameSize)
         {
@@ -39,8 +39,8 @@
             ShortTimeEnergy = CalculateShortTimeEnergy(frames);
             ZeroCrossingRate = CalculateZeroCrossingRate(frames);
             SilentRatio = CalculateSilentRatio(frames);
-            FundamentalFrequencyAutocorrelation = CalculateFundamentalFrequencyAutocorrelation(frames, sampleRate);
-            FundamentalFrequencyAMDF = CalculateFundamentalFrequencyAMDF(frames, sampleRate);
+            FundamentalFrequencyAutocorrelation = EstimateF0Autocorrelation(frames, sampleRate, MinF0, MaxF0);
+            FundamentalFrequencyAMDF = EstimateF0Autocorrelation(frames, sampleRate, MinF0, MaxF0);
 
             VSTD = CalculateVSTD(Volume);
             VMEAN = CalculateVMEAN(Volume);
@@ -156,7 +156,7 @@
             return A;
         }
 
-        private float EstimateF0Autocorrelation(float[] frame, int sampleRate, float minF0 = 50f, float maxF0 = 400f)
+        private float EstimateF0AutocorrelationForFrame(float[] frame, int sampleRate, float minF0, float maxF0)
         {
             int N = frame.Length;
             int lagMin = (int)(sampleRate / maxF0);
@@ -174,7 +174,7 @@
             return f0_autocorrelation;
         }
 
-        private float EstimateF0AMDF(float[] frame, int sampleRate, float minF0 = 50f, float maxF0 = 400f)
+        private float EstimateF0AMDFForFrame(float[] frame, int sampleRate, float minF0, float maxF0)
         {
             int N = frame.Length;
             int lagMin = (int)(sampleRate / maxF0);
@@ -190,6 +190,24 @@
             float f0_amdf = sampleRate / (float)bestLagA;
 
             return f0_amdf;
+        }
+
+        private float[] EstimateF0Autocorrelation(IReadOnlyList<float[]> frames, int sampleRate, float minF0, float maxF0)
+        {
+            int frameCount = frames.Count;
+            float[] f0_autocorrelation_array = new float[frameCount];
+            for (int i = 0; i < frameCount; i++)
+                f0_autocorrelation_array[i] = EstimateF0AutocorrelationForFrame(frames[i], sampleRate, minF0, maxF0);
+            return f0_autocorrelation_array;
+        }
+
+        private float[] EstimateF0AMDF(IReadOnlyList<float[]> frames, int sampleRate, float minF0, float maxF0)
+        {
+            int frameCount = frames.Count;
+            float[] f0_AMDF_array = new float[frameCount];
+            for (int i = 0; i < frameCount; i++)
+                f0_AMDF_array[i] = EstimateF0AMDFForFrame(frames[i], sampleRate, minF0, maxF0);
+            return f0_AMDF_array;
         }
 
         // --- Cechy na poziomie klipu ---
