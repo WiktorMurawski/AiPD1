@@ -30,8 +30,8 @@
         public static float ZCRSilenceThreshold { get; set; } = 0.001f;
 
         // Do Autocorrelation i AMDF
-        public static int MinLag { get; set; } = 50;
-        public static int MaxLag { get; set; } = 200;
+        public static int MinF0 { get; set; } = 50;
+        public static int MaxF0 { get; set; } = 200;
 
         public void UpdateAllParameters(IReadOnlyList<float[]> frames, int sampleRate, int frameSize)
         {
@@ -48,10 +48,10 @@
             VU = CalculateVU(Volume);
 
             LSTER = CalculateLSTER(ShortTimeEnergy);
-            //EnergyEntropy = CalculateEnergyEntropy(ShortTimeEnergy);
+            EnergyEntropy = CalculateEnergyEntropy(frames);
 
             ZSTD = CalculateZSTD(ZeroCrossingRate);
-            //HZCRR = CalculateHZCRR(ZeroCrossingRate);
+            HZCRR = CalculateHZCRR(ZeroCrossingRate);
         }
 
         public void UpdateSilentRatio(IReadOnlyList<float[]> frames)
@@ -135,68 +135,61 @@
             return srArray;
         }
 
-        private float[] CalculateFundamentalFrequencyAutocorrelation(IReadOnlyList<float[]> frames, int sampleRate)
+        // --- Szacowanie Fundamental Frequency na podstawie Autocorrelation i AMDF ---
+        private float[] Autocorrelation(float[] frame)
         {
-            int frameCount = frames.Count;
-            float[] ffArray = new float[frameCount];
-
-            for (int i = 0; i < frameCount; i++)
-            {
-                float[] frame = frames[i];
-                float maxCorrelation = float.MinValue;
-                int bestLag = 0;
-                for (int lag = MinLag; lag <= MaxLag; lag++)
-                {
-                    float correlation = 0f;
-                    for (int j = 0; j < frame.Length - lag; j++)
-                    {
-                        correlation += frame[j] * frame[j + lag];
-                    }
-                    if (correlation > maxCorrelation)
-                    {
-                        maxCorrelation = correlation;
-                        bestLag = lag;
-                    }
-                }
-
-                ffArray[i] = (bestLag >= MinLag && maxCorrelation > 0.35f)
-                    ? (float)sampleRate / bestLag
-                    : 0f;
-            }
-
-            return ffArray;
+            int N = frame.Length;
+            float[] R = new float[N];
+            for (int l = 0; l < N; l++)
+                for (int i = 0; i < N - l; i++)
+                    R[l] += frame[i] * frame[i + l];
+            return R;
         }
 
-        private float[] CalculateFundamentalFrequencyAMDF(IReadOnlyList<float[]> frames, int sampleRate)
+        private float[] AMDF(float[] frame)
         {
-            int frameCount = frames.Count;
-            float[] ffArray = new float[frameCount];
+            int N = frame.Length;
+            float[] A = new float[N];
+            for (int l = 0; l < N; l++)
+                for (int i = 0; i < N - l; i++)
+                    A[l] += MathF.Abs(frame[i + l] - frame[i]);
+            return A;
+        }
 
-            for (int i = 0; i < frameCount; i++)
-            {
-                float[] frame = frames[i];
-                float minAMDF = float.MaxValue;
-                int bestLag = 0;
-                for (int lag = MinLag; lag <= MaxLag; lag++)
-                {
-                    float amdf = 0f;
-                    for (int j = 0; j < frame.Length - lag; j++)
-                    {
-                        amdf += Math.Abs(frame[j + lag] - frame[j]);
-                    }
-                    if (amdf < minAMDF)
-                    {
-                        minAMDF = amdf;
-                        bestLag = lag;
-                    }
-                }
+        private float EstimateF0Autocorrelation(float[] frame, int sampleRate, float minF0 = 50f, float maxF0 = 400f)
+        {
+            int N = frame.Length;
+            int lagMin = (int)(sampleRate / maxF0);
+            int lagMax = (int)(sampleRate / minF0);
 
-                ffArray[i] = (bestLag >= MinLag)
-                    ? (float)sampleRate / bestLag
-                    : 0f;
-            }
+            lagMax = Math.Min(lagMax, N - 1);
 
-            return ffArray;
+            float[] R = Autocorrelation(frame);
+            int bestLagR = lagMin;
+            for (int l = lagMin + 1; l <= lagMax; l++)
+                if (R[l] > R[bestLagR])
+                    bestLagR = l;
+            float f0_autocorrelation = sampleRate / (float)bestLagR;
+
+            return f0_autocorrelation;
+        }
+
+        private float EstimateF0AMDF(float[] frame, int sampleRate, float minF0 = 50f, float maxF0 = 400f)
+        {
+            int N = frame.Length;
+            int lagMin = (int)(sampleRate / maxF0);
+            int lagMax = (int)(sampleRate / minF0);
+
+            lagMax = Math.Min(lagMax, N - 1);
+
+            float[] A = AMDF(frame);
+            int bestLagA = lagMin;
+            for (int l = lagMin + 1; l <= lagMax; l++)
+                if (A[l] < A[bestLagA])
+                    bestLagA = l;
+            float f0_amdf = sampleRate / (float)bestLagA;
+
+            return f0_amdf;
         }
 
         // --- Cechy na poziomie klipu ---
@@ -243,7 +236,7 @@
             return vu;
         }
 
-        float CalculateLSTER(float[] ste)
+        private float CalculateLSTER(float[] ste)
         {
             float avSTE = ste.Average();
             int N = ste.Length;
@@ -259,9 +252,33 @@
             return sum / (2f * N);
         }
 
-        private float CalculateEnergyEntropy(float[] ste)
+        private float CalculateEnergyEntropy(IReadOnlyList<float[]> frames, int K = 16)
         {
-            throw new NotImplementedException();
+            int frameCount = frames.Count;
+            int frameSize = frames[0].Length;
+
+            float I = 0.0f;
+            for (int i = 0; i < frameCount; i++)
+            {
+                float[] frame = frames[i];
+                float totalEnergy = frame.Sum(sample => sample * sample) + 1e-10f;
+
+                for (int j = 0; j < frameSize / K; j++)
+                {
+                    float segmentEnergy = 0.0f;
+                    for (int k = 0; k < K; k++)
+                    {
+                        int index = j * K + k;
+                        segmentEnergy += frame[index] * frame[index];
+                    }
+
+                    float normalizedEnergy = segmentEnergy / totalEnergy;
+
+                    I -= normalizedEnergy * MathF.Log2(normalizedEnergy + 1e-10f);
+                }
+            }
+
+            return I;
         }
 
         private float CalculateZSTD(float[] zcr)
@@ -273,7 +290,17 @@
 
         private float CalculateHZCRR(float[] zcr)
         {
-            throw new NotImplementedException();
+            int frameCount = zcr.Length;
+            float avZCR = zcr.Average();
+
+            float hzcrr = 0.0f;
+            for (int i = 0; i < frameCount; i++)
+            {
+                hzcrr += Math.Sign(zcr[i] - 1.5 * avZCR) + 1;
+            }
+            hzcrr /= 2 * frameCount;
+
+            return hzcrr;
         }
     }
 }
