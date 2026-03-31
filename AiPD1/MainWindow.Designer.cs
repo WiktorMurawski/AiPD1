@@ -185,7 +185,9 @@
             MainSplitContainer.Panel2.Controls.Add(groupBox3);
             MainSplitContainer.Panel2.Controls.Add(groupBox2);
             MainSplitContainer.Panel2.Controls.Add(groupBox1);
+            MainSplitContainer.Panel2.Controls.Add(ZCRSilenceThreshold_Label);
             MainSplitContainer.Panel2.Controls.Add(FrameSize_Label);
+            MainSplitContainer.Panel2.Controls.Add(ZCRThreshold_NumericUpDown);
             MainSplitContainer.Panel2.Controls.Add(FrameSize_ComboBox);
             MainSplitContainer.Panel2.RightToLeft = RightToLeft.No;
             MainSplitContainer.RightToLeft = RightToLeft.No;
@@ -201,7 +203,7 @@
             FFAMDFPlot.Location = new Point(0, 1203);
             FFAMDFPlot.Margin = new Padding(3, 0, 3, 0);
             FFAMDFPlot.Name = "FFAMDFPlot";
-            FFAMDFPlot.Size = new Size(307, 200);
+            FFAMDFPlot.Size = new Size(607, 200);
             FFAMDFPlot.TabIndex = 6;
             // 
             // FFAutocorrelationPlot
@@ -212,7 +214,7 @@
             FFAutocorrelationPlot.Location = new Point(0, 1003);
             FFAutocorrelationPlot.Margin = new Padding(3, 0, 3, 0);
             FFAutocorrelationPlot.Name = "FFAutocorrelationPlot";
-            FFAutocorrelationPlot.Size = new Size(307, 200);
+            FFAutocorrelationPlot.Size = new Size(607, 200);
             FFAutocorrelationPlot.TabIndex = 5;
             // 
             // SRPlot
@@ -223,7 +225,7 @@
             SRPlot.Location = new Point(3, 803);
             SRPlot.Margin = new Padding(3, 0, 3, 0);
             SRPlot.Name = "SRPlot";
-            SRPlot.Size = new Size(304, 200);
+            SRPlot.Size = new Size(604, 200);
             SRPlot.TabIndex = 4;
             // 
             // ZCRPlot
@@ -234,7 +236,7 @@
             ZCRPlot.Location = new Point(3, 603);
             ZCRPlot.Margin = new Padding(3, 0, 3, 0);
             ZCRPlot.Name = "ZCRPlot";
-            ZCRPlot.Size = new Size(304, 200);
+            ZCRPlot.Size = new Size(604, 200);
             ZCRPlot.TabIndex = 3;
             // 
             // STEPlot
@@ -245,7 +247,7 @@
             STEPlot.Location = new Point(3, 403);
             STEPlot.Margin = new Padding(3, 0, 3, 0);
             STEPlot.Name = "STEPlot";
-            STEPlot.Size = new Size(304, 200);
+            STEPlot.Size = new Size(604, 200);
             STEPlot.TabIndex = 2;
             // 
             // VolumePlot
@@ -256,7 +258,7 @@
             VolumePlot.Location = new Point(3, 203);
             VolumePlot.Margin = new Padding(3, 0, 3, 0);
             VolumePlot.Name = "VolumePlot";
-            VolumePlot.Size = new Size(304, 200);
+            VolumePlot.Size = new Size(604, 200);
             VolumePlot.TabIndex = 1;
             // 
             // WavePlot
@@ -267,7 +269,7 @@
             WavePlot.Location = new Point(3, 3);
             WavePlot.Margin = new Padding(3, 3, 3, 0);
             WavePlot.Name = "WavePlot";
-            WavePlot.Size = new Size(304, 200);
+            WavePlot.Size = new Size(604, 200);
             WavePlot.TabIndex = 0;
             WavePlot.Tag = "";
             // 
@@ -514,12 +516,10 @@
             groupBox1.Controls.Add(VolumeSilenceThreshold_Label);
             groupBox1.Controls.Add(SilenceHighlighting_CheckBox);
             groupBox1.Controls.Add(VolumeThreshold_NumericUpDown);
-            groupBox1.Controls.Add(ZCRSilenceThreshold_Label);
-            groupBox1.Controls.Add(ZCRThreshold_NumericUpDown);
             groupBox1.Location = new Point(3, 44);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(0);
-            groupBox1.Size = new Size(224, 107);
+            groupBox1.Size = new Size(224, 87);
             groupBox1.TabIndex = 12;
             groupBox1.TabStop = false;
             groupBox1.Text = "Cisza";
@@ -539,7 +539,7 @@
             SilenceHighlighting_CheckBox.AutoSize = true;
             SilenceHighlighting_CheckBox.Checked = true;
             SilenceHighlighting_CheckBox.CheckState = CheckState.Checked;
-            SilenceHighlighting_CheckBox.Location = new Point(3, 75);
+            SilenceHighlighting_CheckBox.Location = new Point(3, 48);
             SilenceHighlighting_CheckBox.Name = "SilenceHighlighting_CheckBox";
             SilenceHighlighting_CheckBox.Size = new Size(118, 19);
             SilenceHighlighting_CheckBox.TabIndex = 11;
@@ -562,25 +562,27 @@
             // 
             // ZCRSilenceThreshold_Label
             // 
-            ZCRSilenceThreshold_Label.Location = new Point(3, 46);
+            ZCRSilenceThreshold_Label.Location = new Point(6, 303);
             ZCRSilenceThreshold_Label.Margin = new Padding(3);
             ZCRSilenceThreshold_Label.Name = "ZCRSilenceThreshold_Label";
             ZCRSilenceThreshold_Label.Size = new Size(109, 23);
             ZCRSilenceThreshold_Label.TabIndex = 4;
             ZCRSilenceThreshold_Label.Text = "ZCR Threshold";
             ZCRSilenceThreshold_Label.TextAlign = ContentAlignment.MiddleLeft;
+            ZCRSilenceThreshold_Label.Visible = false;
             // 
             // ZCRThreshold_NumericUpDown
             // 
             ZCRThreshold_NumericUpDown.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             ZCRThreshold_NumericUpDown.DecimalPlaces = 4;
             ZCRThreshold_NumericUpDown.Increment = new decimal(new int[] { 1, 0, 0, 262144 });
-            ZCRThreshold_NumericUpDown.Location = new Point(139, 46);
+            ZCRThreshold_NumericUpDown.Location = new Point(142, 303);
             ZCRThreshold_NumericUpDown.Maximum = new decimal(new int[] { 1, 0, 0, 0 });
             ZCRThreshold_NumericUpDown.Name = "ZCRThreshold_NumericUpDown";
             ZCRThreshold_NumericUpDown.Size = new Size(82, 23);
             ZCRThreshold_NumericUpDown.TabIndex = 4;
             ZCRThreshold_NumericUpDown.Value = new decimal(new int[] { 10, 0, 0, 262144 });
+            ZCRThreshold_NumericUpDown.Visible = false;
             ZCRThreshold_NumericUpDown.ValueChanged += ZCRThreshold_NumericUpDown_ValueChanged;
             // 
             // FrameSize_Label

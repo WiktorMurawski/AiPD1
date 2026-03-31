@@ -135,7 +135,8 @@
             for (int i = 0; i < frameCount; i++)
             {
                 float[] frame = frames[i];
-                srArray[i] = ZeroCrossingRate[i] >= ZCRSilenceThreshold && Volume[i] <= VolumeSilenceThreshold ? 1 : 0;
+                //srArray[i] = ZeroCrossingRate[i] >= ZCRSilenceThreshold && Volume[i] <= VolumeSilenceThreshold ? 1 : 0;
+                srArray[i] = Volume[i] <= VolumeSilenceThreshold ? 1 : 0;
             }
 
             return srArray;
