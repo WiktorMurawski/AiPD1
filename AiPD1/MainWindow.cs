@@ -10,14 +10,39 @@ namespace AiPD1
         private const string WINDOW_NAME = "AiPD Projekt 1";
         AudioModel? CurrentAudioModel { get; set; } = null;
         List<(FormsPlot, string)> Plots = new List<(FormsPlot, string)>();
+        private bool _showSilenceHighlighting = true;
 
         public MainWindow()
         {
             InitializeComponent();
 
             SetupComboBoxes();
-
             SetupPlots();
+            SetupNumericUpDowns();
+        }
+
+        private void SetupNumericUpDowns()
+        {
+            VolumeThreshold_NumericUpDown.Minimum = 0;
+            VolumeThreshold_NumericUpDown.Maximum = 1;
+            VolumeThreshold_NumericUpDown.DecimalPlaces = 4;
+            VolumeThreshold_NumericUpDown.Increment = 0.0001M;
+            VolumeThreshold_NumericUpDown.Value = (decimal)TimeParameters.VolumeSilenceThreshold;
+            ZCRThreshold_NumericUpDown.Minimum = 0;
+            ZCRThreshold_NumericUpDown.Maximum = 1;
+            ZCRThreshold_NumericUpDown.DecimalPlaces = 4;
+            ZCRThreshold_NumericUpDown.Increment = 0.0001M;
+            ZCRThreshold_NumericUpDown.Value = (decimal)TimeParameters.ZCRSilenceThreshold;
+            MinF0_NumericUpDown.Minimum = 1;
+            MinF0_NumericUpDown.Maximum = 2000;
+            MinF0_NumericUpDown.DecimalPlaces = 0;
+            MinF0_NumericUpDown.Increment = 1;
+            MinF0_NumericUpDown.Value = (decimal)TimeParameters.MinF0;
+            MaxF0_NumericUpDown.Minimum = 1;
+            MaxF0_NumericUpDown.Maximum = 4000;
+            MaxF0_NumericUpDown.DecimalPlaces = 0;
+            MaxF0_NumericUpDown.Increment = 1;
+            MaxF0_NumericUpDown.Value = (decimal)TimeParameters.MaxF0;
         }
 
         private void SetupComboBoxes()
@@ -109,8 +134,10 @@ namespace AiPD1
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 string filePath = openFileDialog.FileName;
+
+                Cursor = Cursors.WaitCursor;
                 CurrentAudioModel = new AudioModel(filePath);
-                Logger.WriteLine($"Wybrano plik: {filePath}");
+                Cursor = Cursors.Default;
 
                 this.Text = WINDOW_NAME + " - " + CurrentAudioModel.FileName;
 
@@ -120,27 +147,30 @@ namespace AiPD1
 
         private void DisplayCalculatedParams()
         {
+            if (CurrentAudioModel == null) return;
+
             PlotSignals();
             DisplayClipLevelValues();
         }
 
         private void PlotSignals()
         {
-            if (CurrentAudioModel == null)
-                throw new InvalidDataException("Nie można wyświetlić sygnałów, ponieważ CurrentAudioModel jest null.");
+            if (CurrentAudioModel == null) return;
+
             DisplayAudioWaveOnPlot();
             DisplayTimeParamsSignalOnPlot(VolumePlot, CurrentAudioModel.TimeParams.Volume, Colors.Red);
             DisplayTimeParamsSignalOnPlot(STEPlot, CurrentAudioModel.TimeParams.ShortTimeEnergy, Colors.DarkRed);
-            DisplayTimeParamsSignalOnPlot(ZCRPlot, CurrentAudioModel.TimeParams.ZeroCrossingRate, Colors.Green);
-            DisplayTimeParamsSignalOnPlot(SRPlot, CurrentAudioModel.TimeParams.SilentRatio, Colors.Green);
+            DisplayTimeParamsSignalOnPlot(ZCRPlot, CurrentAudioModel.TimeParams.ZeroCrossingRate, Colors.Blue);
+            DisplayTimeParamsSignalOnPlot(SRPlot, CurrentAudioModel.TimeParams.SilentRatio, Colors.DarkCyan);
             DisplayTimeParamsSignalOnPlot(FFAutocorrelationPlot, CurrentAudioModel.TimeParams.FundamentalFrequencyAutocorrelation, Colors.Green);
             DisplayTimeParamsSignalOnPlot(FFAMDFPlot, CurrentAudioModel.TimeParams.FundamentalFrequencyAMDF, Colors.Green);
+            if (_showSilenceHighlighting)
+                MarkSilentFramesOnWavePlot(WavePlot);
         }
 
         private void DisplayClipLevelValues()
         {
-            if (CurrentAudioModel == null)
-                throw new InvalidDataException("Nie można wyświetlić wartości, ponieważ CurrentAudioModel jest null.");
+            if (CurrentAudioModel == null) return;
 
             VSTDValue_Label.Text = $"{CurrentAudioModel.TimeParams.VSTD:F4}";
             VMEANValue_Label.Text = $"{CurrentAudioModel.TimeParams.VMEAN:F4}";
@@ -203,6 +233,26 @@ namespace AiPD1
             plot.Refresh();
         }
 
+        private void MarkSilentFramesOnWavePlot(FormsPlot plot)
+        {
+            if (CurrentAudioModel == null) return;
+
+            var silentFrames = CurrentAudioModel.TimeParams.SilentRatio.Select(x => x > 0.5).ToArray();
+
+            for (int i = 0; i < silentFrames?.Length; i++)
+            {
+                if (silentFrames[i])
+                {
+                    double frameStart = (double)(i * AudioModel.FrameSize) / CurrentAudioModel.SampleRate;
+                    double frameEnd = (double)((i + 1) * AudioModel.FrameSize) / CurrentAudioModel.SampleRate;
+                    var span = plot.Plot.Add.HorizontalSpan(frameStart, frameEnd);
+                    span.FillColor = ScottPlot.Colors.Yellow.WithAlpha(0.3);
+                }
+            }
+
+            plot.Refresh();
+        }
+
         private void FrameSize_ComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             ComboBox cb = (ComboBox)sender;
@@ -211,7 +261,9 @@ namespace AiPD1
 
             if (CurrentAudioModel is null) return;
             AudioModel.FrameSize = selectedValue;
+            Cursor = Cursors.WaitCursor;
             CurrentAudioModel.FrameSizeChanged();
+            Cursor = Cursors.Default;
 
             DisplayCalculatedParams();
         }
@@ -228,6 +280,114 @@ namespace AiPD1
             TimeParameters.ZCRSilenceThreshold = (float)ZCRThreshold_NumericUpDown.Value;
             CurrentAudioModel?.TimeParams.UpdateSilentRatio(CurrentAudioModel.Frames);
             DisplayCalculatedParams();
+        }
+
+        private void MinF0_NumericUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            TimeParameters.MinF0 = (float)MinF0_NumericUpDown.Value;
+            CurrentAudioModel?.TimeParams.UpdateFundamentalFrequencies(CurrentAudioModel.Frames, CurrentAudioModel.SampleRate);
+            DisplayCalculatedParams();
+        }
+
+        private void MaxF0_NumericUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            TimeParameters.MaxF0 = (float)MaxF0_NumericUpDown.Value;
+            CurrentAudioModel?.TimeParams.UpdateFundamentalFrequencies(CurrentAudioModel.Frames, CurrentAudioModel.SampleRate);
+            DisplayCalculatedParams();
+        }
+
+        private void SilenceHighlighting_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            _showSilenceHighlighting = SilenceHighlighting_CheckBox.Checked;
+            PlotSignals();
+        }
+
+        private void ExportCechFrameLevelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (CurrentAudioModel == null)
+            {
+                MessageBox.Show("Nie załadowano żadnego pliku audio.",
+                                "Brak danych",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+                return;
+            }
+
+            using var dialog = new SaveFileDialog
+            {
+                Title = "Eksport parametrów audio do CSV",
+                Filter = "Plik CSV (*.csv)|*.csv|Wszystkie pliki (*.*)|*.*",
+                DefaultExt = "csv",
+                FileName = Path.GetFileNameWithoutExtension(CurrentAudioModel.FileName ?? "audio") + "_parameters",
+                AddExtension = true,
+                OverwritePrompt = true
+            };
+
+            if (dialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
+            {
+                string filePath = dialog.FileName;
+
+                Exporter.ExportFrameLevelTimeParametersToCsv(filePath, CurrentAudioModel.TimeParams, CurrentAudioModel.SampleRate);
+
+                MessageBox.Show("Dane zostały pomyślnie wyeksportowane do pliku CSV.",
+                                "Eksport zakończony sukcesem",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Wystąpił błąd podczas eksportu:\n{ex.Message}",
+                                "Błąd eksportu",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+            }
+        }
+
+        private void exportCechClipLevelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (CurrentAudioModel == null)
+            {
+                MessageBox.Show("Nie załadowano żadnego pliku audio.",
+                                "Brak danych",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+                return;
+            }
+
+            using var dialog = new SaveFileDialog
+            {
+                Title = "Eksport parametrów audio do CSV",
+                Filter = "Plik CSV (*.csv)|*.csv|Wszystkie pliki (*.*)|*.*",
+                DefaultExt = "csv",
+                FileName = Path.GetFileNameWithoutExtension(CurrentAudioModel.FileName ?? "audio") + "_parameters",
+                AddExtension = true,
+                OverwritePrompt = true
+            };
+
+            if (dialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
+            {
+                string filePath = dialog.FileName;
+
+                Exporter.ExportClipLevelTimeParameters(filePath, CurrentAudioModel.TimeParams);
+
+                MessageBox.Show("Dane zostały pomyślnie wyeksportowane do pliku CSV.",
+                                "Eksport zakończony sukcesem",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Wystąpił błąd podczas eksportu:\n{ex.Message}",
+                                "Błąd eksportu",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+            }
         }
     }
 }

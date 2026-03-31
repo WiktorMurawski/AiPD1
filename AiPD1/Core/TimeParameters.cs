@@ -40,7 +40,7 @@
             ZeroCrossingRate = CalculateZeroCrossingRate(frames);
             SilentRatio = CalculateSilentRatio(frames);
             FundamentalFrequencyAutocorrelation = EstimateF0Autocorrelation(frames, sampleRate, MinF0, MaxF0);
-            FundamentalFrequencyAMDF = EstimateF0Autocorrelation(frames, sampleRate, MinF0, MaxF0);
+            FundamentalFrequencyAMDF = EstimateF0AMDF(frames, sampleRate, MinF0, MaxF0);
 
             VSTD = CalculateVSTD(Volume);
             VMEAN = CalculateVMEAN(Volume);
@@ -57,6 +57,12 @@
         public void UpdateSilentRatio(IReadOnlyList<float[]> frames)
         {
             SilentRatio = CalculateSilentRatio(frames);
+        }
+
+        public void UpdateFundamentalFrequencies(IReadOnlyList<float[]> frames, int sampleRate)
+        {
+            FundamentalFrequencyAutocorrelation = EstimateF0Autocorrelation(frames, sampleRate, MinF0, MaxF0);
+            FundamentalFrequencyAMDF = EstimateF0AMDF(frames, sampleRate, MinF0, MaxF0);
         }
 
         // --- Cechy na poziomie ramek ---
@@ -141,8 +147,12 @@
             int N = frame.Length;
             float[] R = new float[N];
             for (int l = 0; l < N; l++)
+            {
                 for (int i = 0; i < N - l; i++)
                     R[l] += frame[i] * frame[i + l];
+
+                R[l] /= (N - l);
+            }
             return R;
         }
 
@@ -151,8 +161,13 @@
             int N = frame.Length;
             float[] A = new float[N];
             for (int l = 0; l < N; l++)
+            {
                 for (int i = 0; i < N - l; i++)
                     A[l] += MathF.Abs(frame[i + l] - frame[i]);
+
+                A[l] /= (N - l);
+            }
+
             return A;
         }
 
@@ -215,13 +230,15 @@
         {
             float mean = volume.Average();
             float std = MathF.Sqrt(volume.Average(v => MathF.Pow(v - mean, 2)));
-            return std;
+            float std_norm = std / (volume.Max() + 1e-10f);
+            return std_norm;
         }
 
         private float CalculateVMEAN(float[] volume)
         {
             float mean = volume.Average();
-            return mean;
+            float mean_norm = mean / (volume.Max() + 1e-10f);
+            return mean_norm;
         }
 
         private float CalculateVDR(float[] volume)
@@ -248,8 +265,8 @@
             float vu = 0f;
             for (int i = 1; i < extrema.Count; i++)
                 vu += Math.Abs(extrema[i] - extrema[i - 1]);
-            if (extrema.Count > 0)
-                vu /= extrema.Count;
+            if (extrema.Count > 1)
+                vu /= (extrema.Count - 1);
 
             return vu;
         }
@@ -281,20 +298,21 @@
                 float[] frame = frames[i];
                 float totalEnergy = frame.Sum(sample => sample * sample) + 1e-10f;
 
+                float frameEntropy = 0.0f;
                 for (int j = 0; j < frameSize / K; j++)
                 {
                     float segmentEnergy = 0.0f;
                     for (int k = 0; k < K; k++)
-                    {
-                        int index = j * K + k;
-                        segmentEnergy += frame[index] * frame[index];
-                    }
+                        segmentEnergy += frame[j * K + k] * frame[j * K + k];
 
                     float normalizedEnergy = segmentEnergy / totalEnergy;
-
-                    I -= normalizedEnergy * MathF.Log2(normalizedEnergy + 1e-10f);
+                    frameEntropy -= normalizedEnergy * MathF.Log2(normalizedEnergy + 1e-10f);
                 }
+                frameEntropy /= (frameSize / K);
+
+                I += frameEntropy;
             }
+            I /= frameCount;
 
             return I;
         }
@@ -303,6 +321,7 @@
         {
             float mean = zcr.Average();
             float std = MathF.Sqrt(zcr.Average(x => MathF.Pow(x - mean, 2)));
+            float std_norm = std;
             return std;
         }
 
