@@ -9,6 +9,7 @@
         public float[] SilentRatio { get; private set; } = Array.Empty<float>();
         public float[] FundamentalFrequencyAutocorrelation { get; private set; } = Array.Empty<float>();
         public float[] FundamentalFrequencyAMDF { get; private set; } = Array.Empty<float>();
+        public float[] VoicedRatio { get; private set; } = Array.Empty<float>();
 
         // --- Cechy na poziomie klipu ---
         // Bazujące na Volume
@@ -52,6 +53,25 @@
 
             ZSTD = CalculateZSTD(ZeroCrossingRate);
             HZCRR = CalculateHZCRR(ZeroCrossingRate);
+
+            VoicedRatio = CalculateVoicedRatio(frames);
+        }
+
+        private float[] CalculateVoicedRatio(IReadOnlyList<float[]> frames)
+        {
+            int frameCount = frames.Count;
+            float[] vrArray = new float[frameCount];
+            for (int i = 0; i < frameCount; i++)
+            {
+                float[] frame = frames[i];
+                vrArray[i] = Volume[i] > VolumeSilenceThreshold ? 1 : 0;
+            }
+            return vrArray;
+        }
+
+        public void UpdateVoicedRatio(IReadOnlyList<float[]> frames)
+        {
+            VoicedRatio = CalculateVoicedRatio(frames);
         }
 
         public void UpdateSilentRatio(IReadOnlyList<float[]> frames)
