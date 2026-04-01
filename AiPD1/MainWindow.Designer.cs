@@ -39,6 +39,7 @@
             widokToolStripMenuItem = new ToolStripMenuItem();
             zresetujWykresyToolStripMenuItem = new ToolStripMenuItem();
             MainSplitContainer = new SplitContainer();
+            VoicedRatioPlot = new ScottPlot.WinForms.FormsPlot();
             FFAMDFPlot = new ScottPlot.WinForms.FormsPlot();
             FFAutocorrelationPlot = new ScottPlot.WinForms.FormsPlot();
             SRPlot = new ScottPlot.WinForms.FormsPlot();
@@ -46,6 +47,10 @@
             STEPlot = new ScottPlot.WinForms.FormsPlot();
             VolumePlot = new ScottPlot.WinForms.FormsPlot();
             WavePlot = new ScottPlot.WinForms.FormsPlot();
+            groupBox4 = new GroupBox();
+            VoicedHighlighting_CheckBox = new CheckBox();
+            ZCRSilenceThreshold_Label = new Label();
+            ZCRThreshold_NumericUpDown = new NumericUpDown();
             groupBox3 = new GroupBox();
             VSTDValue_Label = new Label();
             HZCRRValue_Label = new Label();
@@ -72,8 +77,6 @@
             VolumeSilenceThreshold_Label = new Label();
             SilenceHighlighting_CheckBox = new CheckBox();
             VolumeThreshold_NumericUpDown = new NumericUpDown();
-            ZCRSilenceThreshold_Label = new Label();
-            ZCRThreshold_NumericUpDown = new NumericUpDown();
             FrameSize_Label = new Label();
             FrameSize_ComboBox = new ComboBox();
             MainMenu_MenuStrip.SuspendLayout();
@@ -81,13 +84,14 @@
             MainSplitContainer.Panel1.SuspendLayout();
             MainSplitContainer.Panel2.SuspendLayout();
             MainSplitContainer.SuspendLayout();
+            groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)ZCRThreshold_NumericUpDown).BeginInit();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)MinF0_NumericUpDown).BeginInit();
             ((System.ComponentModel.ISupportInitialize)MaxF0_NumericUpDown).BeginInit();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)VolumeThreshold_NumericUpDown).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)ZCRThreshold_NumericUpDown).BeginInit();
             SuspendLayout();
             // 
             // MainMenu_MenuStrip
@@ -171,6 +175,7 @@
             MainSplitContainer.Panel1.AutoScroll = true;
             MainSplitContainer.Panel1.AutoScrollMinSize = new Size(20, 0);
             MainSplitContainer.Panel1.BackColor = Color.White;
+            MainSplitContainer.Panel1.Controls.Add(VoicedRatioPlot);
             MainSplitContainer.Panel1.Controls.Add(FFAMDFPlot);
             MainSplitContainer.Panel1.Controls.Add(FFAutocorrelationPlot);
             MainSplitContainer.Panel1.Controls.Add(SRPlot);
@@ -182,12 +187,11 @@
             // MainSplitContainer.Panel2
             // 
             MainSplitContainer.Panel2.BackColor = SystemColors.Control;
+            MainSplitContainer.Panel2.Controls.Add(groupBox4);
             MainSplitContainer.Panel2.Controls.Add(groupBox3);
             MainSplitContainer.Panel2.Controls.Add(groupBox2);
             MainSplitContainer.Panel2.Controls.Add(groupBox1);
-            MainSplitContainer.Panel2.Controls.Add(ZCRSilenceThreshold_Label);
             MainSplitContainer.Panel2.Controls.Add(FrameSize_Label);
-            MainSplitContainer.Panel2.Controls.Add(ZCRThreshold_NumericUpDown);
             MainSplitContainer.Panel2.Controls.Add(FrameSize_ComboBox);
             MainSplitContainer.Panel2.RightToLeft = RightToLeft.No;
             MainSplitContainer.RightToLeft = RightToLeft.No;
@@ -195,15 +199,26 @@
             MainSplitContainer.SplitterDistance = 650;
             MainSplitContainer.TabIndex = 1;
             // 
+            // VoicedRatioPlot
+            // 
+            VoicedRatioPlot.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            VoicedRatioPlot.BackColor = Color.White;
+            VoicedRatioPlot.DisplayScale = 1F;
+            VoicedRatioPlot.Location = new Point(3, 1003);
+            VoicedRatioPlot.Margin = new Padding(3, 0, 3, 0);
+            VoicedRatioPlot.Name = "VoicedRatioPlot";
+            VoicedRatioPlot.Size = new Size(522, 200);
+            VoicedRatioPlot.TabIndex = 7;
+            // 
             // FFAMDFPlot
             // 
             FFAMDFPlot.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             FFAMDFPlot.BackColor = Color.White;
             FFAMDFPlot.DisplayScale = 1F;
-            FFAMDFPlot.Location = new Point(0, 1203);
+            FFAMDFPlot.Location = new Point(3, 1403);
             FFAMDFPlot.Margin = new Padding(3, 0, 3, 0);
             FFAMDFPlot.Name = "FFAMDFPlot";
-            FFAMDFPlot.Size = new Size(607, 200);
+            FFAMDFPlot.Size = new Size(522, 200);
             FFAMDFPlot.TabIndex = 6;
             // 
             // FFAutocorrelationPlot
@@ -211,10 +226,10 @@
             FFAutocorrelationPlot.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             FFAutocorrelationPlot.BackColor = Color.White;
             FFAutocorrelationPlot.DisplayScale = 1F;
-            FFAutocorrelationPlot.Location = new Point(0, 1003);
+            FFAutocorrelationPlot.Location = new Point(3, 1203);
             FFAutocorrelationPlot.Margin = new Padding(3, 0, 3, 0);
             FFAutocorrelationPlot.Name = "FFAutocorrelationPlot";
-            FFAutocorrelationPlot.Size = new Size(607, 200);
+            FFAutocorrelationPlot.Size = new Size(522, 200);
             FFAutocorrelationPlot.TabIndex = 5;
             // 
             // SRPlot
@@ -225,7 +240,7 @@
             SRPlot.Location = new Point(3, 803);
             SRPlot.Margin = new Padding(3, 0, 3, 0);
             SRPlot.Name = "SRPlot";
-            SRPlot.Size = new Size(604, 200);
+            SRPlot.Size = new Size(522, 200);
             SRPlot.TabIndex = 4;
             // 
             // ZCRPlot
@@ -236,7 +251,7 @@
             ZCRPlot.Location = new Point(3, 603);
             ZCRPlot.Margin = new Padding(3, 0, 3, 0);
             ZCRPlot.Name = "ZCRPlot";
-            ZCRPlot.Size = new Size(604, 200);
+            ZCRPlot.Size = new Size(519, 200);
             ZCRPlot.TabIndex = 3;
             // 
             // STEPlot
@@ -247,7 +262,7 @@
             STEPlot.Location = new Point(3, 403);
             STEPlot.Margin = new Padding(3, 0, 3, 0);
             STEPlot.Name = "STEPlot";
-            STEPlot.Size = new Size(604, 200);
+            STEPlot.Size = new Size(519, 200);
             STEPlot.TabIndex = 2;
             // 
             // VolumePlot
@@ -258,7 +273,7 @@
             VolumePlot.Location = new Point(3, 203);
             VolumePlot.Margin = new Padding(3, 0, 3, 0);
             VolumePlot.Name = "VolumePlot";
-            VolumePlot.Size = new Size(604, 200);
+            VolumePlot.Size = new Size(519, 200);
             VolumePlot.TabIndex = 1;
             // 
             // WavePlot
@@ -269,9 +284,57 @@
             WavePlot.Location = new Point(3, 3);
             WavePlot.Margin = new Padding(3, 3, 3, 0);
             WavePlot.Name = "WavePlot";
-            WavePlot.Size = new Size(604, 200);
+            WavePlot.Size = new Size(519, 200);
             WavePlot.TabIndex = 0;
             WavePlot.Tag = "";
+            // 
+            // groupBox4
+            // 
+            groupBox4.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            groupBox4.Controls.Add(VoicedHighlighting_CheckBox);
+            groupBox4.Controls.Add(ZCRSilenceThreshold_Label);
+            groupBox4.Controls.Add(ZCRThreshold_NumericUpDown);
+            groupBox4.Location = new Point(3, 253);
+            groupBox4.Name = "groupBox4";
+            groupBox4.Padding = new Padding(0);
+            groupBox4.Size = new Size(224, 92);
+            groupBox4.TabIndex = 15;
+            groupBox4.TabStop = false;
+            groupBox4.Text = "Dźwięczność";
+            // 
+            // VoicedHighlighting_CheckBox
+            // 
+            VoicedHighlighting_CheckBox.AutoSize = true;
+            VoicedHighlighting_CheckBox.Location = new Point(3, 48);
+            VoicedHighlighting_CheckBox.Name = "VoicedHighlighting_CheckBox";
+            VoicedHighlighting_CheckBox.Size = new Size(196, 19);
+            VoicedHighlighting_CheckBox.TabIndex = 12;
+            VoicedHighlighting_CheckBox.Text = "Zaznaczanie ramek dźwięcznych";
+            VoicedHighlighting_CheckBox.UseVisualStyleBackColor = true;
+            VoicedHighlighting_CheckBox.CheckedChanged += VoicedHighlighting_CheckBox_CheckedChanged;
+            // 
+            // ZCRSilenceThreshold_Label
+            // 
+            ZCRSilenceThreshold_Label.Location = new Point(3, 19);
+            ZCRSilenceThreshold_Label.Margin = new Padding(3);
+            ZCRSilenceThreshold_Label.Name = "ZCRSilenceThreshold_Label";
+            ZCRSilenceThreshold_Label.Size = new Size(109, 23);
+            ZCRSilenceThreshold_Label.TabIndex = 4;
+            ZCRSilenceThreshold_Label.Text = "ZCR Threshold";
+            ZCRSilenceThreshold_Label.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // ZCRThreshold_NumericUpDown
+            // 
+            ZCRThreshold_NumericUpDown.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            ZCRThreshold_NumericUpDown.DecimalPlaces = 4;
+            ZCRThreshold_NumericUpDown.Increment = new decimal(new int[] { 1, 0, 0, 262144 });
+            ZCRThreshold_NumericUpDown.Location = new Point(139, 19);
+            ZCRThreshold_NumericUpDown.Maximum = new decimal(new int[] { 1, 0, 0, 0 });
+            ZCRThreshold_NumericUpDown.Name = "ZCRThreshold_NumericUpDown";
+            ZCRThreshold_NumericUpDown.Size = new Size(82, 23);
+            ZCRThreshold_NumericUpDown.TabIndex = 4;
+            ZCRThreshold_NumericUpDown.Value = new decimal(new int[] { 500, 0, 0, 262144 });
+            ZCRThreshold_NumericUpDown.ValueChanged += ZCRThreshold_NumericUpDown_ValueChanged;
             // 
             // groupBox3
             // 
@@ -560,31 +623,6 @@
             VolumeThreshold_NumericUpDown.Value = new decimal(new int[] { 50, 0, 0, 262144 });
             VolumeThreshold_NumericUpDown.ValueChanged += VolumeThreshold_NumericUpDown_ValueChanged;
             // 
-            // ZCRSilenceThreshold_Label
-            // 
-            ZCRSilenceThreshold_Label.Location = new Point(6, 303);
-            ZCRSilenceThreshold_Label.Margin = new Padding(3);
-            ZCRSilenceThreshold_Label.Name = "ZCRSilenceThreshold_Label";
-            ZCRSilenceThreshold_Label.Size = new Size(109, 23);
-            ZCRSilenceThreshold_Label.TabIndex = 4;
-            ZCRSilenceThreshold_Label.Text = "ZCR Threshold";
-            ZCRSilenceThreshold_Label.TextAlign = ContentAlignment.MiddleLeft;
-            ZCRSilenceThreshold_Label.Visible = false;
-            // 
-            // ZCRThreshold_NumericUpDown
-            // 
-            ZCRThreshold_NumericUpDown.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            ZCRThreshold_NumericUpDown.DecimalPlaces = 4;
-            ZCRThreshold_NumericUpDown.Increment = new decimal(new int[] { 1, 0, 0, 262144 });
-            ZCRThreshold_NumericUpDown.Location = new Point(142, 303);
-            ZCRThreshold_NumericUpDown.Maximum = new decimal(new int[] { 1, 0, 0, 0 });
-            ZCRThreshold_NumericUpDown.Name = "ZCRThreshold_NumericUpDown";
-            ZCRThreshold_NumericUpDown.Size = new Size(82, 23);
-            ZCRThreshold_NumericUpDown.TabIndex = 4;
-            ZCRThreshold_NumericUpDown.Value = new decimal(new int[] { 10, 0, 0, 262144 });
-            ZCRThreshold_NumericUpDown.Visible = false;
-            ZCRThreshold_NumericUpDown.ValueChanged += ZCRThreshold_NumericUpDown_ValueChanged;
-            // 
             // FrameSize_Label
             // 
             FrameSize_Label.Location = new Point(3, 3);
@@ -624,6 +662,9 @@
             MainSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)MainSplitContainer).EndInit();
             MainSplitContainer.ResumeLayout(false);
+            groupBox4.ResumeLayout(false);
+            groupBox4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)ZCRThreshold_NumericUpDown).EndInit();
             groupBox3.ResumeLayout(false);
             groupBox3.PerformLayout();
             groupBox2.ResumeLayout(false);
@@ -632,7 +673,6 @@
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)VolumeThreshold_NumericUpDown).EndInit();
-            ((System.ComponentModel.ISupportInitialize)ZCRThreshold_NumericUpDown).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -687,5 +727,8 @@
         private ToolStripMenuItem exportCechFrameLevelToolStripMenuItem;
         private ToolStripMenuItem exportCechClipLevelToolStripMenuItem;
         private GroupBox groupBox3;
+        private ScottPlot.WinForms.FormsPlot VoicedRatioPlot;
+        private GroupBox groupBox4;
+        private CheckBox VoicedHighlighting_CheckBox;
     }
 }

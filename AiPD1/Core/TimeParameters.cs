@@ -7,9 +7,9 @@
         public float[] ShortTimeEnergy { get; private set; } = Array.Empty<float>();
         public float[] ZeroCrossingRate { get; private set; } = Array.Empty<float>();
         public float[] SilentRatio { get; private set; } = Array.Empty<float>();
+        public float[] VoicedRatio { get; private set; } = Array.Empty<float>();
         public float[] FundamentalFrequencyAutocorrelation { get; private set; } = Array.Empty<float>();
         public float[] FundamentalFrequencyAMDF { get; private set; } = Array.Empty<float>();
-        public float[] VoicedRatio { get; private set; } = Array.Empty<float>();
 
         // --- Cechy na poziomie klipu ---
         // Bazujące na Volume
@@ -27,8 +27,8 @@
         public float HZCRR { get; private set; } = 0;
 
         //public float VolumeSilenceThreshold { get; set; } = 0.003f;
-        public static float VolumeSilenceThreshold { get; set; } = 0.005f;
-        public static float ZCRSilenceThreshold { get; set; } = 0.001f;
+        public static float VolumeSilenceThreshold { get; set; } = 0.0050f;
+        public static float ZCRVoicedThreshold { get; set; } = 0.0800f;
 
         // Do Autocorrelation i AMDF
         public static float MinF0 { get; set; } = 50.0f;
@@ -40,6 +40,8 @@
             ShortTimeEnergy = CalculateShortTimeEnergy(frames);
             ZeroCrossingRate = CalculateZeroCrossingRate(frames);
             SilentRatio = CalculateSilentRatio(frames);
+            VoicedRatio = CalculateVoicedRatio(frames);
+
             FundamentalFrequencyAutocorrelation = EstimateF0Autocorrelation(frames, sampleRate, MinF0, MaxF0);
             FundamentalFrequencyAMDF = EstimateF0AMDF(frames, sampleRate, MinF0, MaxF0);
 
@@ -64,7 +66,7 @@
             for (int i = 0; i < frameCount; i++)
             {
                 float[] frame = frames[i];
-                vrArray[i] = Volume[i] > VolumeSilenceThreshold ? 1 : 0;
+                vrArray[i] = Volume[i] > VolumeSilenceThreshold && ZeroCrossingRate[i] <= ZCRVoicedThreshold ? 1 : 0;
             }
             return vrArray;
         }
@@ -127,6 +129,7 @@
         private float[] CalculateZeroCrossingRate(IReadOnlyList<float[]> frames)
         {
             int frameCount = frames.Count;
+            int frameSize = frames[0].Length;
             float[] zceArray = new float[frameCount];
 
             for (int i = 0; i < frameCount; i++)
@@ -141,7 +144,7 @@
                     //    sum++;
                     //}
                 }
-                zceArray[i] = sum / frameCount;
+                zceArray[i] = sum / frameSize;
             }
 
             return zceArray;
@@ -155,7 +158,7 @@
             for (int i = 0; i < frameCount; i++)
             {
                 float[] frame = frames[i];
-                //srArray[i] = ZeroCrossingRate[i] >= ZCRSilenceThreshold && Volume[i] <= VolumeSilenceThreshold ? 1 : 0;
+                //srArray[i] = ZeroCrossingRate[i] >= ZCRVoicedThreshold && Volume[i] <= VolumeSilenceThreshold ? 1 : 0;
                 srArray[i] = Volume[i] <= VolumeSilenceThreshold ? 1 : 0;
             }
 
@@ -342,7 +345,6 @@
         {
             float mean = zcr.Average();
             float std = MathF.Sqrt(zcr.Average(x => MathF.Pow(x - mean, 2)));
-            float std_norm = std;
             return std;
         }
 

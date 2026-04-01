@@ -9,8 +9,8 @@ namespace AiPD1.Helpers
         {
             using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
 
-            string header = "FrameIndex,Time_sec,Volume,ShortTimeEnergy,ZeroCrossingRate," +
-                             "SilentRatio,FundamentalFrequencyAutocorrelation,FundamentalFrequencyAMDF";
+            string header = "FrameIndex,Time_sec,Volume,ShortTimeEnergy,ZeroCrossingRate,SilentRatio,"
+                            + "VoicedRatio,FundamentalFrequencyAutocorrelation,FundamentalFrequencyAMDF";
             writer.WriteLine(header);
 
             int frameCount = tp.Volume.Length;
@@ -19,8 +19,8 @@ namespace AiPD1.Helpers
             {
                 double timeSec = (double)(i) / sampleRate;
 
-                string row = $"{i},{timeSec:F6},{tp.Volume[i]},{tp.ShortTimeEnergy[i]},{tp.ZeroCrossingRate[i]}," +
-                                 $"{tp.SilentRatio[i]},{tp.FundamentalFrequencyAutocorrelation[i]},{tp.FundamentalFrequencyAMDF[i]}";
+                string row = $"{i},{timeSec:F6},{tp.Volume[i]},{tp.ShortTimeEnergy[i]},{tp.ZeroCrossingRate[i]},{tp.SilentRatio[i]},"
+                             + $"{tp.VoicedRatio[i]},{tp.FundamentalFrequencyAutocorrelation[i]},{tp.FundamentalFrequencyAMDF[i]}";
                 writer.WriteLine(row);
             }
         }

@@ -10,7 +10,8 @@ namespace AiPD1
         private const string WINDOW_NAME = "AiPD Projekt 1";
         AudioModel? CurrentAudioModel { get; set; } = null;
         List<(FormsPlot, string)> Plots = new List<(FormsPlot, string)>();
-        private bool _showSilenceHighlighting = true;
+        private bool _showSilenceHighlighting { get; set; } = true;
+        private bool _showVoicedHighlighting { get; set; } = false;
 
         public MainWindow()
         {
@@ -32,7 +33,7 @@ namespace AiPD1
             ZCRThreshold_NumericUpDown.Maximum = 1;
             ZCRThreshold_NumericUpDown.DecimalPlaces = 4;
             ZCRThreshold_NumericUpDown.Increment = 0.0001M;
-            ZCRThreshold_NumericUpDown.Value = (decimal)TimeParameters.ZCRSilenceThreshold;
+            ZCRThreshold_NumericUpDown.Value = (decimal)TimeParameters.ZCRVoicedThreshold;
             MinF0_NumericUpDown.Minimum = 1;
             MinF0_NumericUpDown.Maximum = 2000;
             MinF0_NumericUpDown.DecimalPlaces = 0;
@@ -58,10 +59,11 @@ namespace AiPD1
         {
             Plots.Add((WavePlot, "Fala dźwiękowa"));
             Plots.Add((VolumePlot, "Głośność"));
-            Plots.Add((STEPlot, "STE"));
-            Plots.Add((ZCRPlot, "ZCR"));
-            Plots.Add((SRPlot, "SR"));
-            Plots.Add((FFAutocorrelationPlot, "FF Autocorrelation"));
+            Plots.Add((STEPlot, "Short Time Energy"));
+            Plots.Add((ZCRPlot, "Zero Crossing Rate"));
+            Plots.Add((SRPlot, "Cisza"));
+            Plots.Add((VoicedRatioPlot, "Dźwięczność"));
+            Plots.Add((FFAutocorrelationPlot, "FF Autokorelacja"));
             Plots.Add((FFAMDFPlot, "FF AMDF"));
 
             LinkAllPlotsBidirectionally();
@@ -162,10 +164,13 @@ namespace AiPD1
             DisplayTimeParamsSignalOnPlot(STEPlot, CurrentAudioModel.TimeParams.ShortTimeEnergy, Colors.DarkRed);
             DisplayTimeParamsSignalOnPlot(ZCRPlot, CurrentAudioModel.TimeParams.ZeroCrossingRate, Colors.Blue);
             DisplayTimeParamsSignalOnPlot(SRPlot, CurrentAudioModel.TimeParams.SilentRatio, Colors.DarkCyan);
+            DisplayTimeParamsSignalOnPlot(VoicedRatioPlot, CurrentAudioModel.TimeParams.VoicedRatio, Colors.Purple);
             DisplayTimeParamsSignalOnPlot(FFAutocorrelationPlot, CurrentAudioModel.TimeParams.FundamentalFrequencyAutocorrelation, Colors.Green);
             DisplayTimeParamsSignalOnPlot(FFAMDFPlot, CurrentAudioModel.TimeParams.FundamentalFrequencyAMDF, Colors.Green);
             if (_showSilenceHighlighting)
                 MarkSilentFramesOnWavePlot(WavePlot);
+            if (_showVoicedHighlighting)
+                MarkVoicedFramesOnWavePlot(WavePlot);
         }
 
         private void DisplayClipLevelValues()
@@ -253,6 +258,23 @@ namespace AiPD1
             plot.Refresh();
         }
 
+        private void MarkVoicedFramesOnWavePlot(FormsPlot plot)
+        {
+            if (CurrentAudioModel == null) return;
+            var voicedFrames = CurrentAudioModel.TimeParams.VoicedRatio.Select(x => x > 0.5).ToArray();
+            for (int i = 0; i < voicedFrames?.Length; i++)
+            {
+                if (voicedFrames[i])
+                {
+                    double frameStart = (double)(i * AudioModel.FrameSize) / CurrentAudioModel.SampleRate;
+                    double frameEnd = (double)((i + 1) * AudioModel.FrameSize) / CurrentAudioModel.SampleRate;
+                    var span = plot.Plot.Add.HorizontalSpan(frameStart, frameEnd);
+                    span.FillColor = ScottPlot.Colors.Green.WithAlpha(0.3);
+                }
+            }
+            plot.Refresh();
+        }
+
         private void FrameSize_ComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             ComboBox cb = (ComboBox)sender;
@@ -272,13 +294,14 @@ namespace AiPD1
         {
             TimeParameters.VolumeSilenceThreshold = (float)VolumeThreshold_NumericUpDown.Value;
             CurrentAudioModel?.TimeParams.UpdateSilentRatio(CurrentAudioModel.Frames);
+            CurrentAudioModel?.TimeParams.UpdateVoicedRatio(CurrentAudioModel.Frames);
             DisplayCalculatedParams();
         }
 
         private void ZCRThreshold_NumericUpDown_ValueChanged(object sender, EventArgs e)
         {
-            TimeParameters.ZCRSilenceThreshold = (float)ZCRThreshold_NumericUpDown.Value;
-            CurrentAudioModel?.TimeParams.UpdateSilentRatio(CurrentAudioModel.Frames);
+            TimeParameters.ZCRVoicedThreshold = (float)ZCRThreshold_NumericUpDown.Value;
+            CurrentAudioModel?.TimeParams.UpdateVoicedRatio(CurrentAudioModel.Frames);
             DisplayCalculatedParams();
         }
 
@@ -299,6 +322,12 @@ namespace AiPD1
         private void SilenceHighlighting_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             _showSilenceHighlighting = SilenceHighlighting_CheckBox.Checked;
+            PlotSignals();
+        }
+
+        private void VoicedHighlighting_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            _showVoicedHighlighting = VoicedHighlighting_CheckBox.Checked;
             PlotSignals();
         }
 
